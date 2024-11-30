@@ -9,8 +9,8 @@ servers:
 tags:
   - name: post
     description: Blog post
-  - name: category
-    description: Category of posts
+  - name: tag
+    description: Tag of posts
   - name: user
     description: Operations about user
 paths:
@@ -44,7 +44,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Post'
+              $ref: '#/components/schemas/PostBody'
         required: true
       responses:
         '200':
@@ -98,7 +98,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Post'
+              $ref: '#/components/schemas/PostBody'
         required: true
       responses:
         '200':
@@ -151,6 +151,24 @@ components:
           type: integer
           format: int64
           example: 10
+        user_id:
+          type: integer
+          format: int64
+          example: 10
+        title:
+          type: string
+          example: theTitle
+        content:
+          type: string
+          example: theContent
+        created_at:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
     User:
       type: object
       properties:
@@ -161,53 +179,62 @@ components:
         username:
           type: string
           example: theUser
-        firstName:
-          type: string
-          example: John
-        lastName:
-          type: string
-          example: James
         email:
           type: string
           example: john@email.com
-        password:
+        created_at:
           type: string
-          example: '12345'
-        phone:
+          format: date-time
+          example: 2021-01-01T00:00:00Z
+        updated_at:
           type: string
-          example: '12345'
-        userStatus:
-          type: integer
-          description: User Status
-          format: int32
-          example: 1
+          format: date-time
+          example: 2021-01-01T00:00:00Z
       xml:
         name: user
-    Category:
+    Tag:
       type: object
       properties:
         id:
           type: integer
           format: int64
+          example: 10
         name:
           type: string
+          example: Programming
+        created_at:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2021-01-01T00:00:00Z
       xml:
-        name: category
-  requestBodies:
-    Pet:
-      description: Pet object that needs to be added to the store
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Pet'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Pet'
-    UserArray:
-      description: List of user object
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/User'
+        name: tag
+    PostBody:
+      type: object
+      properties:
+        title:
+          type: string
+          example: theTitle
+        content:
+          type: string
+          example: theContent
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagBody'
+      xml:
+        name: post
+    TagBody:
+      type: object
+      properties:
+        name:
+          type: string
+          example: theTitle
+        slug:
+          type: string
+          example: theContent
+      xml:
+        name: tag

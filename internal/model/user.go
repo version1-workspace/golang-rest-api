@@ -2,25 +2,18 @@ package model
 
 import (
 	"context"
-	"time"
+
+	"github.com/version-1/golang-rest-api/internal/model/entity"
 )
 
+const DummyUserID = 1
+
 type UserModel struct {
-	m Model
+	m Executor
 }
 
-var _ entityScanner = &UserEntity{}
-
-type UserEntity struct {
-	ID        int       `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (u *UserEntity) Scan(rows scanner) error {
-	return rows.Scan(&u.ID, &u.Username, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+func (u UserModel) Query() Query {
+	return Query{m: u}
 }
 
 func (u UserModel) Table() string {
@@ -31,26 +24,30 @@ func (u UserModel) Fields() []string {
 	return []string{"username", "email"}
 }
 
-func (u UserModel) Entity() entityScanner {
-	return &UserEntity{}
+func (u UserModel) Entity() entity.EntityScanner {
+	return &entity.User{}
 }
 
-func (u UserModel) Find(ctx context.Context, id int) (*UserEntity, error) {
-	return find[*UserEntity](ctx, u.m, Query{m: u}, id)
+func (u UserModel) Relationships() map[string]Relationship {
+	return map[string]Relationship{}
 }
 
-func (u UserModel) FindAll(ctx context.Context) ([]*UserEntity, error) {
-	return findAll[*UserEntity](ctx, u.m, Query{m: u}, 10)
+func (u UserModel) Find(ctx context.Context, id int) (*entity.User, error) {
+	return find[*entity.User](ctx, u.m, Query{m: u}, id)
 }
 
-func (u UserModel) Create(ctx context.Context, username, email string) (*UserEntity, error) {
-	return create[*UserEntity](ctx, u.m, Query{m: u}, username, email)
+func (u UserModel) FindAll(ctx context.Context) ([]*entity.User, error) {
+	return findAll[*entity.User](ctx, u.m, Query{m: u}, 10)
 }
 
-func (u UserModel) Update(ctx context.Context, id int, username, email string) (*UserEntity, error) {
-	return update[*UserEntity](ctx, u.m, Query{m: u}, id, username, email)
+func (u UserModel) Create(ctx context.Context, username, email string) (*entity.User, error) {
+	return create[*entity.User](ctx, u.m, Query{m: u}, username, email)
 }
 
-func (u UserModel) Delete(ctx context.Context, id int) (*UserEntity, error) {
-	return update[*UserEntity](ctx, u.m, Query{m: u}, id)
+func (u UserModel) Update(ctx context.Context, id int, username, email string) (*entity.User, error) {
+	return update[*entity.User](ctx, u.m, Query{m: u}, id, username, email)
+}
+
+func (u UserModel) Delete(ctx context.Context, id int) (*entity.User, error) {
+	return update[*entity.User](ctx, u.m, Query{m: u}, id)
 }

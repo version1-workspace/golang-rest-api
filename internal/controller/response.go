@@ -16,6 +16,10 @@ type NilResponse map[string]any
 
 var nilResponse = NilResponse{"data": nil}
 
+func NewNilResponse() NilResponse {
+	return nilResponse
+}
+
 func NewResponse[I, O any](w http.ResponseWriter, r *http.Request) *Response[I, O] {
 	contentType := "application/json"
 	w.Header().Add("Content-Type", contentType)
@@ -70,24 +74,24 @@ func (c *Response[I, O]) renderError(w http.ResponseWriter, err error) *Response
 	return c
 }
 
-func (c *Response[I, O]) Created() *Response[I, O] {
-	return c.Status(http.StatusCreated).renderEmpty(c.w)
+func (c *Response[I, O]) Created() {
+	c.Status(http.StatusCreated).renderEmpty(c.w)
 }
 
-func (c *Response[I, O]) NotFound(payload error) *Response[I, O] {
-	return c.Status(http.StatusNotFound).renderError(c.w, payload)
+func (c *Response[I, O]) NotFound(payload error) {
+	c.Status(http.StatusNotFound).renderError(c.w, payload)
 }
 
-func (c *Response[I, O]) InternalServerError(payload error) *Response[I, O] {
-	return c.Status(http.StatusInternalServerError).renderError(c.w, payload)
+func (c *Response[I, O]) InternalServerError(payload error) {
+	c.Status(http.StatusInternalServerError).renderError(c.w, payload)
 }
 
-func (c *Response[I, O]) Unauthorized(payload error) *Response[I, O] {
-	return c.Status(http.StatusUnauthorized).renderError(c.w, payload)
+func (c *Response[I, O]) Unauthorized(payload error) {
+	c.Status(http.StatusUnauthorized).renderError(c.w, payload)
 }
 
-func (c *Response[I, O]) UnprocessableEntity(payload error) *Response[I, O] {
-	return c.Status(http.StatusUnprocessableEntity).renderError(c.w, payload)
+func (c *Response[I, O]) UnprocessableEntity(payload error) {
+	c.Status(http.StatusUnprocessableEntity).renderError(c.w, payload)
 }
 
 func (c *Response[I, O]) BadRequest(payload error) *Response[I, O] {

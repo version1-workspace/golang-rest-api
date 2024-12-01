@@ -2,24 +2,13 @@ package model
 
 import (
 	"context"
-	"time"
+	"database/sql"
+
+	"github.com/version-1/golang-rest-api/internal/model/entity"
 )
 
 type TagModel struct {
-	m Model
-}
-
-type TagEntity struct {
-	ID        int       `json:"id"`
-	Slug      string    `json:"slug"`
-	Name      string    `json:"name"`
-	PostID    int       `json:"post_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func (t *TagEntity) Scan(rows scanner) error {
-	return rows.Scan(&t.ID, &t.Name, &t.PostID, &t.CreatedAt, &t.UpdatedAt)
+	m Executor
 }
 
 func (t TagModel) Table() string {
@@ -27,29 +16,80 @@ func (t TagModel) Table() string {
 }
 
 func (t TagModel) Fields() []string {
-	return []string{"name", "post_id"}
+	return []string{"slug", "name", "post_id"}
 }
 
-func (t TagModel) Entity() entityScanner {
-	return &TagEntity{}
+func (t TagModel) Entity() entity.EntityScanner {
+	return &entity.Tag{}
 }
 
-func (u TagModel) Find(ctx context.Context, id int) (*TagEntity, error) {
-	return find[*TagEntity](ctx, u.m, Query{m: u}, id)
+func (t TagModel) Relationships() map[string]Relationship {
+	return map[string]Relationship{}
 }
 
-func (u TagModel) FindAll(ctx context.Context) ([]*TagEntity, error) {
-	return findAll[*TagEntity](ctx, u.m, Query{m: u}, 10)
+func (u TagModel) Find(ctx context.Context, id int) (*entity.Tag, error) {
+	return find[*entity.Tag](ctx, u.m, Query{m: u}, id)
 }
 
-func (u TagModel) Create(ctx context.Context, name string, postID int) (*TagEntity, error) {
-	return create[*TagEntity](ctx, u.m, Query{m: u}, name, postID)
+func (u TagModel) FindAll(ctx context.Context) ([]*entity.Tag, error) {
+	return findAll[*entity.Tag](ctx, u.m, Query{m: u}, 10)
 }
 
-func (u TagModel) Update(ctx context.Context, id int, name string) (*TagEntity, error) {
-	return update[*TagEntity](ctx, u.m, Query{m: u}, id, name)
+func (u TagModel) Create(ctx context.Context, slug, name string, postID int) (*entity.Tag, error) {
+	return create[*entity.Tag](ctx, u.m, Query{m: u}, slug, name, postID)
 }
 
-func (u TagModel) Delete(ctx context.Context, id int) (*TagEntity, error) {
-	return update[*TagEntity](ctx, u.m, Query{m: u}, id)
+func (u TagModel) Update(ctx context.Context, id int, name string) (*entity.Tag, error) {
+	return update[*entity.Tag](ctx, u.m, Query{m: u}, id, name)
+}
+
+func (u TagModel) DetachAll(ctx context.Context, postID int) error {
+	if _, err := u.m.ExecContext(ctx, "DELETE FROM tag_posts WHERE post_id = $1", postID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u TagModel) Attach(ctx context.Context, postID int, slug, name string) (*entity.Tag, error) {
+	findQuery := "SELECT * FROM tags WHERE slug = ? LIMIT 1"
+	tag := &entity.Tag{}
+	err := tag.Scan(u.m.QueryRowContext(ctx, findQuery, slug))
+	if err != sql.ErrNoRows {
+		return tag, err
+	}
+
+	if err == sql.ErrNoRows {
+		tag, err = u.Create(ctx, slug, name, postID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	attachQuery := "INSERT INTO tag_posts (post_id, tag_id) VALUES(?, ?)"
+	_, err = u.m.ExecContext(ctx, attachQuery, postID, tag.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return tag, nil
+}
+
+func (u TagModel) UpsertBySlug(ctx context.Context, slug, name string, postID int) (*entity.Tag, error) {
+	query := "SELECT * FROM tags WHERE slug = ? LIMIT 1"
+	tag := &entity.Tag{}
+	err := tag.Scan(u.m.QueryRowContext(ctx, query, slug))
+	if err != sql.ErrNoRows {
+		return tag, err
+	}
+
+	if err == sql.ErrNoRows {
+		return u.Create(ctx, slug, name, postID)
+	}
+
+	return u.Update(ctx, tag.ID, name)
+}
+
+func (u TagModel) Delete(ctx context.Context, id int) (*entity.Tag, error) {
+	return update[*entity.Tag](ctx, u.m, Query{m: u}, id)
 }
